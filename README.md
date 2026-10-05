@@ -1,47 +1,29 @@
-# AWFLWIKIDATAWORLD 🥰
+# AWFLWIKIDATAWORLD
 
-**Structured documentation for the AWFL ecosystem** — guides, specs, and implementation notes for building and maintaining everything under the AEDTP WORLD FREE LICENSE (AWFL).
+Static wiki on GitHub Pages + a PHP "hidden writer" on Render that commits to this repo.
 
-🌐 **Read it live:** https://aedtpworldawfl.github.io/awflwikidataworld/
+```
+index.html  config.json  tree.json  robots.txt  sitemap.xml  llms.txt  .nojekyll
+.well-known/{ai.txt,robots.txt}
+backend/{api.php,config.php,.env.example,Dockerfile}
+render.yaml
+```
 
----
+## 1. GitHub Pages
+Push everything to `aedtpworldawfl/awflwikidataworld` (branch `main`), then Settings → Pages → Deploy from branch `main` / root.
+Keep `.nojekyll` — without it GitHub ignores the `.well-known` folder.
 
-## What is this?
+## 2. GitHub token
+Create a fine-grained token limited to this repo with **Contents: Read and write**.
 
-AWFLWIKIDATAWORLD is a small, fast, open documentation wiki. Everything is organized into **folders**, and each folder holds **pages** you can browse and search.
+## 3. Render
+New → Blueprint → pick this repo (uses `render.yaml`). Set the secret `GITHUB_TOKEN`.
+Your API URL will be `https://<service-name>.onrender.com/api.php`.
 
-- 📁 **Folders** group related topics together
-- 📄 **Pages** are plain, readable documents with setup steps, usage notes and examples
-- 🔎 **Search** helps you find folders and pages quickly
-- 📱 **Works everywhere** — phone, tablet and desktop
+## 4. Connect the frontend
+Either edit `DEFAULT_API` near the top of the script in `index.html`, or paste the URL into the login box (🔐) — it is remembered in that browser.
 
-## How to use it
-
-1. Open the [wiki](https://aedtpworldawfl.github.io/awflwikidataworld/).
-2. Pick a folder, or type in the search bar.
-3. Click a page to read it. The breadcrumb at the top (`Home > folder > page`) shows where you are.
-
-Every page is also a normal standalone web page, so you can link straight to it, share it, or bookmark it.
-
-## For search engines and AI tools
-
-The site is built to be easy to find and easy to read for people and machines:
-
-- `sitemap.xml` lists every page
-- `llms.txt` gives AI tools a plain-text map of the whole wiki
-- `robots.txt` welcomes search and AI crawlers
-- Each page carries descriptive titles, metadata and structured data
-
-## License
-
-Content and code are shared under the **AEDTP WORLD FREE LICENSE (AWFL)**.
-
-© AEDTP WORLD
-
-## Links
-
-- Website: https://aedtpworld.com
-- YouTube: https://youtube.com/@aedtpworld
-- Crunchbase: https://www.crunchbase.com/organization/aedtpworld
-- SoundBetter: https://soundbetter.com/profiles/636065-aedtp-world
-- F6S: https://www.f6s.com/aedtpworld
+## Security note
+`config.json` is public (that is how the login in `index.html` works), so the password is readable by anyone.
+To protect the writer, set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in Render: the API then ignores the values in `config.json`.
+(The login box would then need those same values to be entered into `config.json` for the front-end check, or the front-end check can be changed to call the API's `login` action.)

@@ -1,0 +1,18 @@
+# Render has no native PHP runtime, so the writer API runs from the Dockerfile in /backend.
+services:
+  - type: web
+    name: awflwikidataworld-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /api.php?ping=1
+    envVars:
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: GITHUB_REPO
+        value: aedtpworldawfl/awflwikidataworld
+      - key: GITHUB_BRANCH
+        value: main
+      - key: ALLOWED_ORIGIN
+        value: https://aedtpworldawfl.github.io
