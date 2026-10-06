@@ -1,5 +1,0 @@
-# AWFLWIKIDATAWORLD
-
-> Structured documentation for AWFL ecosystem
-
-- [Home](https://aedtpworldawfl.github.io/awflwikidataworld/)
