@@ -1,0 +1,74 @@
+name: Sync from Byethost
+
+# Copies the public wiki files from the primary site (Byethost) into this repo, same paths.
+# Reads <server>/filemap.json - the list written by sitemap.php / fileupdate.php.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-byethost
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mirror files listed in filemap.json
+        env:
+          # Must equal $Server in config.php. To change it without editing this file, set a repo variable named BYETHOST_URL.
+          SERVER: ${{ vars.BYETHOST_URL || 'https://aedtpworld.byethost12.com' }}
+        run: |
+          set -euo pipefail
+          UA="Mozilla/5.0 (compatible; AWFL-Mirror/1.0)"
+          WORK="$RUNNER_TEMP/mirror"; rm -rf "$WORK"; mkdir -p "$WORK/new"
+
+          # 1. the list of files
+          curl -fsSL --retry 3 -A "$UA" "$SERVER/filemap.json?t=$(date +%s)" -o "$WORK/filemap.json" \
+            || { echo "::error::Could not download $SERVER/filemap.json"; exit 1; }
+          if ! jq -e 'type=="array" and length>0' "$WORK/filemap.json" >/dev/null 2>&1; then
+            echo "::error::filemap.json is not a valid, non-empty list. The host may be answering bots with a challenge page. First bytes:"
+            head -c 300 "$WORK/filemap.json"; echo; exit 1
+          fi
+
+          # 2. download everything into a temp folder first (nothing is touched if a download fails)
+          #    never mirrored: the protected files, and anything under .github
+          jq -r '.[] | select(.name|startswith("/")) | select(.name|contains("..")|not) | [.name,.source]|@tsv' "$WORK/filemap.json" \
+          | while IFS=$'\t' read -r name source; do
+              case "$name" in
+                /index.html|/config.php|/.htaccess|/fileupdate.php|/sitemap.php|/.github/*|/README.md|/.nojekyll) continue ;;
+              esac
+              mkdir -p "$WORK/new$(dirname "$name")"
+              curl -fsSL --retry 3 -A "$UA" "$source" -o "$WORK/new$name" \
+                || { echo "::error::Download failed: $source"; exit 1; }
+              if grep -qs 'slowAES\|__test=' "$WORK/new$name"; then
+                echo "::error::$source returned the host's anti-bot challenge page instead of the file"; exit 1
+              fi
+              case "$name" in *.json) jq -e . "$WORK/new$name" >/dev/null || { echo "::error::Invalid JSON: $name"; exit 1; } ;; esac
+              case "$name" in *.xml)  head -c 5 "$WORK/new$name" | grep -q '<?xml' || { echo "::error::Invalid XML: $name"; exit 1; } ;; esac
+            done
+
+          # 3. copy in, then remove mirrored files that are no longer in the list
+          cp -a "$WORK/new/." .
+          git ls-files \
+            | grep -Ev '^(index\.html|README\.md|\.nojekyll|\.gitignore|LICENSE.*|\.github/.*)$' \
+            | while IFS= read -r f; do
+                jq -e --arg n "/$f" 'any(.[]; .name==$n)' "$WORK/filemap.json" >/dev/null || git rm -q -- "$f"
+              done
+
+          # 4. commit if anything changed
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Already up to date."
+          else
+            git commit -q -m "Sync from Byethost $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
