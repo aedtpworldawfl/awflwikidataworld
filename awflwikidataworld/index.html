@@ -87,7 +87,7 @@ footer.site{margin:20px 16px 16px;background:#fff;border:2px solid var(--pink-l)
 /* Static mirror: no PHP, no login. These values were filled in at build time from the Byethost config.php. */
 const SERVER = "https://aedtpworld.byethost12.com";
 const BASE = "";   // where the wiki folders are, relative to this page
-const DB = "../database.json";       // database.json: list of folders/pages
+const DB = "database.json";       // database.json: list of folders/pages
 const METATITLE = "AWFLWIKIDATAWORLD DATABASE";
 
 let tree = {folders:{}, images:[]};
@@ -172,4 +172,6 @@ loadTree().then(route);
 </script>
 </body>
 </html>
+
+
 
