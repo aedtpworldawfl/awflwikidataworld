@@ -1,5 +1,27 @@
 {
-    "updated": "2026-10-10T07:49:03+00:00",
-    "folders": {},
+    "updated": "2026-10-10T16:01:48+00:00",
+    "folders": {
+        "identifiers": [
+            "Id.html"
+        ],
+        "properties": [
+            "P1.html",
+            "P2.html",
+            "P3.html",
+            "P4.html",
+            "P5.html",
+            "P6.html",
+            "P7.html",
+            "P8.html",
+            "P9.html",
+            "P10.html",
+            "P11.html",
+            "P12.html",
+            "P13.html",
+            "P14.html",
+            "P15.html",
+            "P16.html"
+        ]
+    },
     "images": []
 }
